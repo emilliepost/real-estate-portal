@@ -9,21 +9,12 @@ export type PropertyCardProps = {
   title: string
   address: string
   priceCzk: string
-  meta?: string[] // e.g., ["12 jednotek", "1–4+kk", "2026"]
-  labels?: string[] // e.g., ["Nové", "Dostupné"]
+  href?: string
+  meta?: string[]
+  labels?: string[]
 }
 
-function slugify(input: string) {
-  return input
-    .normalize("NFKD")                    // split accents
-    .replace(/[\u0300-\u036f]/g, "")      // strip accents
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")          // non-alnum → hyphen
-    .replace(/^-+|-+$/g, "")              // trim hyphens
-}
-
-export function PropertyCard({ imageUrl, title, address, priceCzk, meta = [], labels = [] }: PropertyCardProps) {
-  const slug = slugify(title)
+export function PropertyCard({ imageUrl, title, address, priceCzk, meta = [], labels = [], href }: PropertyCardProps) {
   return (
     <Card className="overflow-hidden group">
       <div className="relative aspect-[16/10]">
@@ -42,8 +33,8 @@ export function PropertyCard({ imageUrl, title, address, priceCzk, meta = [], la
       </div>
 
       <div className="p-4 space-y-2">
-        <h3 className="text-base font-semibold leading-tight">{title}</h3>
-        <p className="text-sm text-muted-foreground">{address}</p>
+        <h3 className="text-base font-semibold leading-tight line-clamp-1">{title}</h3>
+        <p className="text-sm text-muted-foreground line-clamp-1">{address}</p>
 
         {meta.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-1">
@@ -55,9 +46,11 @@ export function PropertyCard({ imageUrl, title, address, priceCzk, meta = [], la
 
         <div className="flex items-center justify-between pt-3">
           <div className="text-base font-semibold">{priceCzk}</div>
-          <Button asChild size="sm">
-            <Link href={`/project/${slug}`}>Detail</Link>
-          </Button>
+          {href ? (
+            <Button asChild size="sm"><Link href={href}>Detail</Link></Button>
+          ) : (
+            <Button size="sm" disabled>Detail</Button>
+          )}
         </div>
       </div>
     </Card>
