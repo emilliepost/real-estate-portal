@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+
 import Link from "next/link"
 import Image from "next/image"
 import { db } from "@/db/client"
@@ -46,7 +47,6 @@ export default async function ProjectDetail({ params }: { params: Promise<{ slug
         </BreadcrumbList>
       </Breadcrumb>
 
-      {/* cover */}
       {images[0]?.url && (
         <div className="relative w-full aspect-[16/6] rounded-xl overflow-hidden ring-1 ring-border">
           <Image

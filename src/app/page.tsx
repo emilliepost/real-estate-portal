@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic'
+
 import { ListingGrid } from "@/components/listing-grid"
 import { FiltersDialog } from "@/components/filters-dialog"
 import { db } from "@/db/client"
