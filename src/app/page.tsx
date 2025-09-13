@@ -27,17 +27,17 @@ function priceLabel(minPrice: string | null): string {
 }
 
 function toCard(r: Row): PropertyCardProps {
+  const delivery =
+    r.deliveryFrom && r.deliveryTo ? `${r.deliveryFrom}–${r.deliveryTo}` :
+    (r.deliveryFrom ?? r.deliveryTo ?? "")
   return {
     imageUrl: r.cover ?? "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?q=80&w=1600&auto=format&fit=crop",
     title: r.name,
     address: r.address,
     priceCzk: priceLabel(r.minPrice),
     href: `/project/${r.slug}`,
-    meta: [
-      r.deliveryFrom && r.deliveryTo ? `${r.deliveryFrom}–${r.deliveryTo}` :
-      (r.deliveryFrom ?? r.deliveryTo ?? "")
-    ].filter(Boolean) as string[],
-    labels: r.unitCount > 0 ? ["Dostupné"] : [],
+    meta: [delivery, r.unitCount ? `${r.unitCount} jednotek` : ""].filter(Boolean) as string[],
+    labels: r.unitCount > 0 ? ["Dostupné"] : ["Vyprodáno"],
   }
 }
 
@@ -51,20 +51,10 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const maxVal = maxRaw ? Number(maxRaw) : undefined
 
   const conds = []
-
-  if (q) {
-    conds.push(or(ilike(projects.name, `%${q}%`), ilike(projects.address, `%${q}%`)))
-  }
-  if (layout) {
-    conds.push(eq(units.layout, layout))
-  }
-  // NOTE: units.priceCzk is a NUMERIC column typed as string in Drizzle -> pass strings here
-  if (minVal !== undefined) {
-    conds.push(gte(units.priceCzk, String(minVal)))
-  }
-  if (maxVal !== undefined) {
-    conds.push(lte(units.priceCzk, String(maxVal)))
-  }
+  if (q) conds.push(or(ilike(projects.name, `%${q}%`), ilike(projects.address, `%${q}%`)))
+  if (layout) conds.push(eq(units.layout, layout))
+  if (minVal !== undefined) conds.push(gte(units.priceCzk, String(minVal)))
+  if (maxVal !== undefined) conds.push(lte(units.priceCzk, String(maxVal)))
 
   const rows = await db
     .select({

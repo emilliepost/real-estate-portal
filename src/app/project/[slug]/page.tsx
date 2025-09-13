@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic'
 
 import Link from "next/link"
-import Image from "next/image"
 import { db } from "@/db/client"
 import { projects, units, media } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
@@ -13,6 +12,14 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table"
 import { formatCzk } from "@/lib/format"
+import Gallery from "@/components/gallery"
+
+function statusBadge(status: string | null | undefined) {
+  const s = (status ?? "").toLowerCase()
+  if (s === "sold") return <Badge variant="secondary">Prodáno</Badge>
+  if (s === "reserved") return <Badge className="bg-amber-500 text-white hover:bg-amber-600">Rezervováno</Badge>
+  return <Badge className="bg-emerald-600 text-white hover:bg-emerald-700">Dostupné</Badge>
+}
 
 export default async function ProjectDetail({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -32,8 +39,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ slug
   const images = await db.select().from(media)
     .where(and(eq(media.entityType, "project"), eq(media.entityId, p.id)))
 
-  const list = await db.select().from(units)
-    .where(eq(units.projectId, p.id))
+  const list = await db.select().from(units).where(eq(units.projectId, p.id))
 
   return (
     <main className="p-8 space-y-6">
@@ -47,17 +53,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ slug
         </BreadcrumbList>
       </Breadcrumb>
 
-      {images[0]?.url && (
-        <div className="relative w-full aspect-[16/6] rounded-xl overflow-hidden ring-1 ring-border">
-          <Image
-            src={images[0].url}
-            alt={p.name}
-            fill
-            className="object-cover"
-            sizes="100vw"
-          />
-        </div>
-      )}
+      <Gallery images={images.map(m => ({ url: m.url }))} />
 
       <header className="space-y-2">
         <h1 className="text-3xl font-semibold">{p.name}</h1>
@@ -82,6 +78,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ slug
                   <TableHead>Dispozice</TableHead>
                   <TableHead>Podlaží</TableHead>
                   <TableHead>Výmera (m²)</TableHead>
+                  <TableHead>Stav</TableHead>
                   <TableHead className="text-right">Cena</TableHead>
                 </TableRow>
               </TableHeader>
@@ -92,6 +89,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ slug
                     <TableCell>{u.layout ?? "-"}</TableCell>
                     <TableCell>{u.floor ?? "-"}</TableCell>
                     <TableCell>{u.areaM2 ?? "-"}</TableCell>
+                    <TableCell>{statusBadge(u.status)}</TableCell>
                     <TableCell className="text-right">{formatCzk(u.priceCzk as string | number | null)}</TableCell>
                   </TableRow>
                 ))}
