@@ -1,100 +1,96 @@
-"use client"
+'use client'
 
 import * as React from "react"
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Calendar } from "@/components/ui/calendar"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+
+function getString(sp: URLSearchParams, key: string): string {
+  const v = sp.get(key)
+  return v ?? ""
+}
 
 export function FiltersDialog() {
+  const router = useRouter()
+  const sp = useSearchParams()
+  const current = React.useMemo(() => new URLSearchParams(sp.toString()), [sp])
+
   const [open, setOpen] = React.useState(false)
-  const [fromDate, setFromDate] = React.useState<Date | undefined>()
-  const [toDate, setToDate] = React.useState<Date | undefined>()
+  const [q, setQ] = React.useState<string>(getString(current, "q"))
+  const [layout, setLayout] = React.useState<string>(getString(current, "layout"))
+  const [min, setMin] = React.useState<string>(getString(current, "min"))
+  const [max, setMax] = React.useState<string>(getString(current, "max"))
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const params = new URLSearchParams()
+    if (q.trim()) params.set("q", q.trim())
+    if (layout) params.set("layout", layout)
+    if (min) params.set("min", min)
+    if (max) params.set("max", max)
+    const qs = params.toString()
+    router.push(qs ? `/?${qs}` : "/")
+    setOpen(false)
+  }
+
+  function onClear() {
+    setQ("")
+    setLayout("")
+    setMin("")
+    setMax("")
+    router.push("/")
+    setOpen(false)
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline">Filtry</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Filtry</DialogTitle>
         </DialogHeader>
+        <form className="space-y-4" onSubmit={onSubmit}>
+          <div className="space-y-2">
+            <Label htmlFor="q">Hledat (projekt/adresa)</Label>
+            <Input id="q" value={q} onChange={(e) => setQ(e.target.value)} placeholder="např. Vinohrady, Hostivař…" />
+          </div>
 
-        <div className="space-y-6">
-          {/* Row 1: Location + Property type */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Zadejte lokalitu</label>
-              <Input placeholder="Praha" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Typ nemovitosti</label>
-              <Select>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Dispozice</Label>
+              <Select value={layout} onValueChange={setLayout}>
                 <SelectTrigger><SelectValue placeholder="Vyberte" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="flat">Byt</SelectItem>
-                  <SelectItem value="house">Dům</SelectItem>
-                  <SelectItem value="land">Pozemek</SelectItem>
+                  <SelectItem value="">Nezáleží</SelectItem>
+                  <SelectItem value="1+kk">1+kk</SelectItem>
+                  <SelectItem value="2+kk">2+kk</SelectItem>
+                  <SelectItem value="3+kk">3+kk</SelectItem>
+                  <SelectItem value="4+kk">4+kk</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          {/* Row 2: Price + Area */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Cena, od–do (Kč)</label>
-              <div className="flex gap-2">
-                <Input placeholder="Min" type="number" inputMode="numeric" />
-                <Input placeholder="Max" type="number" inputMode="numeric" />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="min">Cena od (Kč)</Label>
+              <Input id="min" inputMode="numeric" pattern="[0-9]*" value={min} onChange={(e) => setMin(e.target.value.replace(/\D/g, ""))} placeholder="5000000" />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Výmera, od–do (m²)</label>
-              <div className="flex gap-2">
-                <Input placeholder="Min" type="number" inputMode="numeric" />
-                <Input placeholder="Max" type="number" inputMode="numeric" />
-              </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="max">Cena do (Kč)</Label>
+              <Input id="max" inputMode="numeric" pattern="[0-9]*" value={max} onChange={(e) => setMax(e.target.value.replace(/\D/g, ""))} placeholder="10000000" />
             </div>
           </div>
 
-          {/* Row 3: Dispositions */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Dispozice</label>
-            <ToggleGroup type="multiple" className="flex flex-wrap gap-2">
-              {["1+kk","1+1","2+kk","2+1","3+kk","3+1","4+kk","4+1","Jiné"].map((v) => (
-                <ToggleGroupItem key={v} value={v} className="px-3">
-                  {v}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
+          <div className="flex gap-2 pt-2">
+            <Button type="submit">Použít</Button>
+            <Button type="button" variant="ghost" onClick={onClear}>Vymazat</Button>
           </div>
-
-          {/* Row 4: Move-in dates */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">K nastěhování od</label>
-              <Calendar mode="single" selected={fromDate} onSelect={setFromDate} className="rounded-md border" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">K nastěhování do</label>
-              <Calendar mode="single" selected={toDate} onSelect={setToDate} className="rounded-md border" />
-            </div>
-          </div>
-
-          {/* Footer buttons */}
-          <div className="flex justify-between">
-            <Button variant="ghost" onClick={() => setOpen(false)}>Zrušit filtry</Button>
-            <Button onClick={() => setOpen(false)}>Zobrazit</Button>
-          </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   )
