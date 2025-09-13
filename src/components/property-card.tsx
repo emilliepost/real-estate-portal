@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,6 +14,7 @@ export type PropertyCardProps = {
 }
 
 export function PropertyCard({ imageUrl, title, address, priceCzk, meta = [], labels = [] }: PropertyCardProps) {
+  const slug = encodeURIComponent(title.toLowerCase().replaceAll(" ", "-"))
   return (
     <Card className="overflow-hidden group">
       <div className="relative aspect-[16/10]">
@@ -44,7 +46,9 @@ export function PropertyCard({ imageUrl, title, address, priceCzk, meta = [], la
 
         <div className="flex items-center justify-between pt-3">
           <div className="text-base font-semibold">{priceCzk}</div>
-          <Button size="sm">Detail</Button>
+          <Button asChild size="sm">
+            <Link href={`/project/${slug}`}>Detail</Link>
+          </Button>
         </div>
       </div>
     </Card>
