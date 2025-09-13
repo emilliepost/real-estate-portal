@@ -52,28 +52,20 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
   const conds = []
 
-  // text search on project (optional)
   if (q) {
-    conds.push(
-      or(
-        ilike(projects.name, `%${q}%`),
-        ilike(projects.address, `%${q}%`)
-      )
-    )
+    conds.push(or(ilike(projects.name, `%${q}%`), ilike(projects.address, `%${q}%`)))
   }
-
-  // For layout/price filters we need to look at units; we apply them in WHERE as well.
   if (layout) {
     conds.push(eq(units.layout, layout))
   }
+  // NOTE: units.priceCzk is a NUMERIC column typed as string in Drizzle -> pass strings here
   if (minVal !== undefined) {
-    conds.push(gte(units.priceCzk, minVal))
+    conds.push(gte(units.priceCzk, String(minVal)))
   }
   if (maxVal !== undefined) {
-    conds.push(lte(units.priceCzk, maxVal))
+    conds.push(lte(units.priceCzk, String(maxVal)))
   }
 
-  // Build a single aggregated query: min price & unit count per project + a cover image
   const rows = await db
     .select({
       id: projects.id,
