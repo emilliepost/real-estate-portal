@@ -91,7 +91,7 @@ export default async function ProjectDetail({ params }: { params: Promise<{ slug
                     <TableCell>{u.layout ?? "-"}</TableCell>
                     <TableCell>{u.floor ?? "-"}</TableCell>
                     <TableCell>{u.areaM2 ?? "-"}</TableCell>
-                    <TableCell className="text-right">{formatCzk(u.priceCzk as any)}</TableCell>
+                    <TableCell className="text-right">{formatCzk(u.priceCzk as string | number | null)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

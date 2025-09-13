@@ -4,8 +4,11 @@ import { db } from "@/db/client"
 import { projects, media } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
 import { Badge } from "@/components/ui/badge"
+import type { PropertyCardProps } from "@/components/property-card"
 
-function toCard(p: any, imageUrl?: string) {
+type ProjectRow = typeof projects.$inferSelect
+
+function toCard(p: ProjectRow, imageUrl?: string): PropertyCardProps {
   return {
     imageUrl: imageUrl ?? "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?q=80&w=1600&auto=format&fit=crop",
     title: p.name,
@@ -14,16 +17,18 @@ function toCard(p: any, imageUrl?: string) {
     href: `/project/${p.slug}`,
     meta: [
       p.deliveryFrom && p.deliveryTo ? `${p.deliveryFrom}–${p.deliveryTo}` : p.deliveryFrom ?? p.deliveryTo ?? ""
-    ].filter(Boolean),
+    ].filter(Boolean) as string[],
     labels: ["Dostupné"],
   }
 }
 
 export default async function HomePage() {
   const rows = await db.select().from(projects).limit(12)
-  const cards = []
+  const cards: PropertyCardProps[] = []
   for (const p of rows) {
-    const cover = await db.select().from(media)
+    const cover = await db
+      .select()
+      .from(media)
       .where(and(eq(media.entityType, "project"), eq(media.entityId, p.id)))
       .limit(1)
     cards.push(toCard(p, cover[0]?.url))
@@ -39,7 +44,7 @@ export default async function HomePage() {
         <FiltersDialog />
       </header>
 
-      <ListingGrid items={cards as any} />
+      <ListingGrid items={cards} />
     </main>
   )
 }
