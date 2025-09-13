@@ -4,14 +4,15 @@ import {
   Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator
 } from "@/components/ui/breadcrumb"
 
-type Params = { params: { slug: string } }
+export default async function ProjectDetail({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
 
-export default function ProjectDetail({ params }: Params) {
-  const { slug } = params
+  // turn "bydleni-u-parku" into "Bydleni U Parku"
+  const plain = decodeURIComponent(slug).replace(/-/g, " ")
+  const name = plain.replace(/\b\w/g, (l) => l.toUpperCase())
 
-  // placeholder mock – later we’ll fetch by slug from DB
   const project = {
-    name: slug.replaceAll("-", " ").replace(/\b\w/g, l => l.toUpperCase()),
+    name,
     address: "Korunní 123, Praha 2",
     meta: ["12 jednotek", "1–4+kk", "2026"],
     description:

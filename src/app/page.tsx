@@ -19,7 +19,7 @@ const MOCKS = [
     labels: ["Nové"],
   },
   {
-    imageUrl: "https://images.unsplash.com/photo-1501963013930-343f86608795?q=80&w=1600&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?q=80&w=1600&auto=format&fit=crop",
     title: "Riverfront",
     address: "Nábřeží 7, Praha 8",
     priceCzk: "od 9 200 000 Kč",

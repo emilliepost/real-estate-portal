@@ -13,8 +13,17 @@ export type PropertyCardProps = {
   labels?: string[] // e.g., ["Nové", "Dostupné"]
 }
 
+function slugify(input: string) {
+  return input
+    .normalize("NFKD")                    // split accents
+    .replace(/[\u0300-\u036f]/g, "")      // strip accents
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")          // non-alnum → hyphen
+    .replace(/^-+|-+$/g, "")              // trim hyphens
+}
+
 export function PropertyCard({ imageUrl, title, address, priceCzk, meta = [], labels = [] }: PropertyCardProps) {
-  const slug = encodeURIComponent(title.toLowerCase().replaceAll(" ", "-"))
+  const slug = slugify(title)
   return (
     <Card className="overflow-hidden group">
       <div className="relative aspect-[16/10]">
