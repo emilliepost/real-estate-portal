@@ -17,13 +17,13 @@ type Row = {
   address: string
   deliveryFrom: number | null
   deliveryTo: number | null
-  minPrice: string | null
-  unitCount: number
+  minAvailable: string | null
+  availableCount: number
   cover: string | null
 }
 
-function priceLabel(minPrice: string | null): string {
-  return minPrice ? `od ${formatCzk(minPrice)}` : "ceny na dotaz"
+function priceLabel(minAvailable: string | null): string {
+  return minAvailable ? `od ${formatCzk(minAvailable)}` : "ceny na dotaz"
 }
 
 function toCard(r: Row): PropertyCardProps {
@@ -34,10 +34,10 @@ function toCard(r: Row): PropertyCardProps {
     imageUrl: r.cover ?? "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?q=80&w=1600&auto=format&fit=crop",
     title: r.name,
     address: r.address,
-    priceCzk: priceLabel(r.minPrice),
+    priceCzk: priceLabel(r.minAvailable),
     href: `/project/${r.slug}`,
-    meta: [delivery, r.unitCount ? `${r.unitCount} jednotek` : ""].filter(Boolean) as string[],
-    labels: r.unitCount > 0 ? ["Dostupné"] : ["Vyprodáno"],
+    meta: [delivery, `${r.availableCount} dostupných`].filter(Boolean) as string[],
+    labels: r.availableCount > 0 ? ["Dostupné"] : ["Vyprodáno"],
   }
 }
 
@@ -53,9 +53,11 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
   const conds = []
   if (q) conds.push(or(ilike(projects.name, `%${q}%`), ilike(projects.address, `%${q}%`)))
   if (layout) conds.push(eq(units.layout, layout))
+  // Drizzle numeric typed as string -> pass strings for comparisons
   if (minVal !== undefined) conds.push(gte(units.priceCzk, String(minVal)))
   if (maxVal !== undefined) conds.push(lte(units.priceCzk, String(maxVal)))
 
+  // Aggregate: min price of AVAILABLE units + AVAILABLE count, per project
   const rows = await db
     .select({
       id: projects.id,
@@ -64,8 +66,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       address: projects.address,
       deliveryFrom: projects.deliveryFrom,
       deliveryTo: projects.deliveryTo,
-      minPrice: sql<string | null>`min(${units.priceCzk})`,
-      unitCount: sql<number>`count(${units.id})`,
+      minAvailable: sql<string | null>`min(case when ${units.status} = 'available' then ${units.priceCzk} end)`,
+      availableCount: sql<number>`coalesce(sum(case when ${units.status} = 'available' then 1 else 0 end), 0)`,
       cover: sql<string | null>`max(${media.url})`,
     })
     .from(projects)
